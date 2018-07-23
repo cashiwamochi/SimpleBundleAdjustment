@@ -1,6 +1,6 @@
 # Bundle Adjustment 2-View
 
-This repository includes a C++ implementation which performs Bundle Adjustment in 2-View. This BA is very simple, so it maybe a tutorial for beginners. This supports *pose-only-BA, motion-only-BA, full-BA*.
+This repository includes a C++ implementation which performs Bundle Adjustment in 2-View. This BA is very simple, so it maybe a tutorial for beginners. This supports *pose-only-BA, structure-only-BA, full-BA*.
 These reference pdf are very helpful.
 
 ```
@@ -17,7 +17,6 @@ Using Gauss-Newton method, the projection-error is minimized.
 ```
 BundleAdjustment2Viewes.* -> Implementation of BA.
 main_ba.cc -> An example shows how to use BA.
-
 ```
 
 ### Dependencies
@@ -38,7 +37,7 @@ I cannot make sure that this implementation is currect. However, this system min
 ------
 # 2-Viewでのバンドル調整
 
-勉強がてら，2-Viewにおけるバンドル調整を実装した．*pose-only-BA, motion-only-BA, full-BA* を一通りサポートしている．実装にあたっては下記資料が大変参考になった．
+勉強がてら，2-Viewにおけるバンドル調整を実装した．*pose-only-BA, structure-only-BA, full-BA* を一通りサポートしている．実装にあたっては下記資料が大変参考になった．
 
 ```
 [1]http://frc.ri.cmu.edu/~kaess/vslam_cvpr14/media/VSLAM-Tutorial-CVPR14-A13-BundleAdjustment.pdf   
@@ -54,7 +53,6 @@ I cannot make sure that this implementation is currect. However, this system min
 ```
 BundleAdjustment2Viewes.* -> バンドル調整の実装
 ba_example.cc -> 2画像の特徴点対応づけ，カメラ姿勢推定，三角測量を行い，その後バンドル調整を行う．
-
 ```
 
 ### 依存
