@@ -667,6 +667,8 @@ namespace BA2Viewes {
 
     cv::Mat mat_for_viewer;
     cv::hconcat(m_image0, m_image1, mat_for_viewer);
+    cv::putText( mat_for_viewer, "BLUE : Feature Points", cv::Point{10,20}, cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(255,0,0),2);
+    cv::putText( mat_for_viewer, "GREEN : Reprojected Points", cv::Point{10,45}, cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0,255,0),2);
     cv::imshow(ms_window_name, mat_for_viewer);
     cv::waitKey(1);
 #if 1
