@@ -1,5 +1,8 @@
 # Bundle Adjustment 2-View
 
+![BA_sample_gif](https://github.com/cashiwamochi/SimpleBundleAdjustment/blob/master/gif/ba.gif "Sample")
+
+
 This repository includes a C++ implementation which performs Bundle Adjustment in 2-View. This BA is very simple, so it maybe a tutorial for beginners. This supports *pose-only-BA, structure-only-BA, full-BA*.
 These reference pdf are very helpful.
 
