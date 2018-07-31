@@ -475,6 +475,10 @@ namespace BA2Viewes {
       std::cout << "Reprojection Error : " << error << " ( iter_num = " << iter << " )"<< std::endl;
       cv::Mat delta_x = ComputeUpdateParams(J, mat_reprojection_error);
       vm_poses_for_process = UpdateParams(vm_poses_for_process, delta_x);
+
+      if(mb_verbose) {
+        ShowProcess(vm_poses_for_process, m_pose_and_structure);
+      }
     }
 
     return error;
@@ -495,6 +499,10 @@ namespace BA2Viewes {
       std::cout << "Reprojection Error : " << error << " ( iter_num = " << iter << " )"<< std::endl;
       cv::Mat delta_x = ComputeUpdateParams(J, mat_reprojection_error);
       m_structure_for_process = UpdateParams(std::vector<cv::Mat>{m_structure_for_process}, delta_x)[0];
+
+      if(mb_verbose) {
+        ShowProcess(std::vector<cv::Mat>{m_structure_for_process}, m_pose_and_structure);
+      }
     }
 
     return error;
@@ -571,8 +579,9 @@ namespace BA2Viewes {
 
   void Optimizer::ShowProcess(const std::vector<cv::Mat> vm_data_for_process, const PoseAndStructure& _pose_and_structure) {
     const cv::Mat K = _pose_and_structure.m_Kd;
+
     std::vector<cv::Mat> vm_point2d_noise(2);
-    
+
     switch(me_mode)
     {
       case BA2Viewes::POSE : {
@@ -604,7 +613,6 @@ namespace BA2Viewes {
         const int N_cameras = 2;
         cv::Mat point3d_homo = cv::Mat::ones(4,vm_data_for_process[0].cols,CV_64F);
         vm_data_for_process[0].copyTo(point3d_homo.rowRange(0,3));
-
         vm_point2d_noise[0] = K * _pose_and_structure.vp_pose_and_structure[0].first * point3d_homo;
         vm_point2d_noise[1] = K * _pose_and_structure.vp_pose_and_structure[1].first * point3d_homo;
 
@@ -618,6 +626,7 @@ namespace BA2Viewes {
           vm_point2d_noise[1].at<double>(1,i) = vm_point2d_noise[1].at<double>(1,i)/vm_point2d_noise[1].at<double>(2,i);
           vm_point2d_noise[1].at<double>(2,i) = vm_point2d_noise[1].at<double>(2,i)/vm_point2d_noise[1].at<double>(2,i);
         }
+
       } break;
       case BA2Viewes::FULL: {
         assert( vm_data_for_process.size() == 3 );
@@ -642,7 +651,6 @@ namespace BA2Viewes {
         }
       } break;
     }
-
     std::pair< std::vector<cv::Point2d>,std::vector<cv::Point2d> > pv_point2d;
     pv_point2d.first.reserve(vm_point2d_noise[0].cols);
     pv_point2d.second.reserve(vm_point2d_noise[1].cols); 
@@ -669,9 +677,10 @@ namespace BA2Viewes {
     cv::hconcat(m_image0, m_image1, mat_for_viewer);
     cv::putText( mat_for_viewer, "BLUE : Feature Points", cv::Point{10,20}, cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(255,0,0),2);
     cv::putText( mat_for_viewer, "GREEN : Reprojected Points", cv::Point{10,45}, cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0,255,0),2);
+    cv::resize(mat_for_viewer, mat_for_viewer,cv::Size(m_image0.cols,m_image0.rows/2));
     cv::imshow(ms_window_name, mat_for_viewer);
     cv::waitKey(1);
-#if 1
+#if 0
     static int count = 1;
     count = count + 1;
     cv::imwrite(std::to_string(count)+".png", mat_for_viewer);
