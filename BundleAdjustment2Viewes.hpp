@@ -19,9 +19,12 @@ namespace BA2Viewes {
   class Optimizer {
   public:
     Optimizer(const PoseAndStructure _pose_and_structure, const BAMode _mode);
-    ~Optimizer(){};
+    ~Optimizer(){ if(mb_verbose) {cv::destroyWindow(ms_window_name);} };
     double Run();
     void SetTargetData(const std::vector<cv::Mat>& _vm_noised_data);
+    void SetImagePair(const std::pair<cv::Mat,cv::Mat> _pm_images);
+    void SetVerbose(const bool b_verbose);
+    void Spin();
 
   private:
     double OptimizeOnlyStructure(); // Structure-only BA
@@ -36,6 +39,8 @@ namespace BA2Viewes {
 
     bool IsConverged(const double current_error, const double previous_error);
 
+    void ShowProcess(const std::vector<cv::Mat> vm_data_for_process, const PoseAndStructure& _pose_and_structure);
+
     const PoseAndStructure m_pose_and_structure;
     const BAMode me_mode;
     const int m_MAXITER = 30;
@@ -44,6 +49,9 @@ namespace BA2Viewes {
     cv::Mat mm_noised_structure;
     std::pair<cv::Mat, cv::Mat> mpm_noised_poses;
 
+    bool mb_verbose;
+    std::pair<cv::Mat,cv::Mat> mpm_images;
+    const std::string ms_window_name = "debug-window ( Press q to exit )";
   };
 
   void AddNoiseToPose(const cv::Mat& _src, cv::Mat& _dst);

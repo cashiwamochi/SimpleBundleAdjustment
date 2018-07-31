@@ -1,5 +1,8 @@
 build
 UniversityLibrary
+.DS_Store
+test_images
+house_images
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

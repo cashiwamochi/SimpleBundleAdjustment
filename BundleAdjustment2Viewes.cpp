@@ -13,7 +13,7 @@ namespace BA2Viewes {
     std::vector<double> vd_noise(6);
 
     const double d_true_value = 0.0;
-    double d_variance = 0.001;
+    double d_variance = 0.05;
 
     std::random_device seed;
     std::mt19937 engine(seed());
@@ -26,7 +26,7 @@ namespace BA2Viewes {
       vd_noise[i] = dist_for_rotation(engine);
     }
 
-    d_variance = 0.001;
+    d_variance = 0.01;
     d_sig = sqrt(d_variance);
     std::normal_distribution<> dist_for_translation(d_mu, d_sig);
 
@@ -68,7 +68,7 @@ namespace BA2Viewes {
     const int N = _dst.cols;
 
     const double d_true_value = 0.0;
-    const double d_variance = 0.001;
+    const double d_variance = 0.1;
 
     std::random_device seed;
     std::mt19937 engine(seed());
@@ -95,7 +95,8 @@ namespace BA2Viewes {
   Optimizer::Optimizer(const PoseAndStructure _pose_and_structure, const BAMode _mode)
   : m_pose_and_structure(_pose_and_structure), me_mode(_mode)
   {
-
+    mb_verbose = false;
+    mpm_images = std::make_pair(cv::noArray().getMat(), cv::noArray().getMat());
   }
 
   cv::Mat Optimizer::ComputeJ(const std::vector<cv::Mat>& vm_data_for_process, const PoseAndStructure& _pose_and_structure) {
@@ -439,6 +440,9 @@ namespace BA2Viewes {
 
   // This returns |reprojection error|^2
   double Optimizer::Run() {
+    if(mb_verbose) {
+      cv::namedWindow(ms_window_name);
+    }
     double error = -1.0;
     switch(me_mode)
     {
@@ -511,9 +515,17 @@ namespace BA2Viewes {
       std::cout << "Reprojection Error : " << error << " ( iter_num = " << iter << " )"<< std::endl;
       cv::Mat delta_x = ComputeUpdateParams(J, mat_reprojection_error);
       vm_data_for_process = UpdateParams(vm_data_for_process, delta_x);
+      if(mb_verbose) {
+        ShowProcess(vm_data_for_process, m_pose_and_structure);
+      }
     }
 
     return error;
+  }
+
+  void Optimizer::SetImagePair(const std::pair<cv::Mat,cv::Mat> _pm_images) {
+    mpm_images = _pm_images;
+    return;
   }
 
   void Optimizer::SetTargetData(const std::vector<cv::Mat>& _vm_noised_data) {
@@ -557,4 +569,136 @@ namespace BA2Viewes {
     return b_stop_optimization;
   }
 
-}
+  void Optimizer::ShowProcess(const std::vector<cv::Mat> vm_data_for_process, const PoseAndStructure& _pose_and_structure) {
+    const cv::Mat K = _pose_and_structure.m_Kd;
+    std::vector<cv::Mat> vm_point2d_noise(2);
+    
+    switch(me_mode)
+    {
+      case BA2Viewes::POSE : {
+        assert( vm_data_for_process.size() == 2 );
+        double reprojection_error = 0.0;
+        const int N_points = _pose_and_structure.m_point3d.cols;
+        const int N_cameras = 2;
+        cv::Mat point3d_homo = cv::Mat::ones(4, N_points, CV_64F);
+        _pose_and_structure.m_point3d.copyTo(point3d_homo.rowRange(0,3));
+
+        vm_point2d_noise[0] = K * vm_data_for_process[0] * point3d_homo;
+        vm_point2d_noise[1] = K * vm_data_for_process[1] * point3d_homo;
+
+        // 正規化
+        for(int i = 0; i < (int)vm_point2d_noise[0].cols; i++) {
+          vm_point2d_noise[0].at<double>(0,i) = vm_point2d_noise[0].at<double>(0,i)/vm_point2d_noise[0].at<double>(2,i);
+          vm_point2d_noise[0].at<double>(1,i) = vm_point2d_noise[0].at<double>(1,i)/vm_point2d_noise[0].at<double>(2,i);
+          vm_point2d_noise[0].at<double>(2,i) = vm_point2d_noise[0].at<double>(2,i)/vm_point2d_noise[0].at<double>(2,i);
+
+          vm_point2d_noise[1].at<double>(0,i) = vm_point2d_noise[1].at<double>(0,i)/vm_point2d_noise[1].at<double>(2,i);
+          vm_point2d_noise[1].at<double>(1,i) = vm_point2d_noise[1].at<double>(1,i)/vm_point2d_noise[1].at<double>(2,i);
+          vm_point2d_noise[1].at<double>(2,i) = vm_point2d_noise[1].at<double>(2,i)/vm_point2d_noise[1].at<double>(2,i);
+        }
+      } break;
+      case BA2Viewes::STRUCTURE: {
+        assert( vm_data_for_process.size() == 1 );
+        double reprojection_error = 0.0;
+        const int N_points = _pose_and_structure.m_point3d.cols;
+        const int N_cameras = 2;
+        cv::Mat point3d_homo = cv::Mat::ones(4,vm_data_for_process[0].cols,CV_64F);
+        vm_data_for_process[0].copyTo(point3d_homo.rowRange(0,3));
+
+        vm_point2d_noise[0] = K * _pose_and_structure.vp_pose_and_structure[0].first * point3d_homo;
+        vm_point2d_noise[1] = K * _pose_and_structure.vp_pose_and_structure[1].first * point3d_homo;
+
+        // 正規化
+        for(int i = 0; i < (int)vm_point2d_noise[0].cols; i++) {
+          vm_point2d_noise[0].at<double>(0,i) = vm_point2d_noise[0].at<double>(0,i)/vm_point2d_noise[0].at<double>(2,i);
+          vm_point2d_noise[0].at<double>(1,i) = vm_point2d_noise[0].at<double>(1,i)/vm_point2d_noise[0].at<double>(2,i);
+          vm_point2d_noise[0].at<double>(2,i) = vm_point2d_noise[0].at<double>(2,i)/vm_point2d_noise[0].at<double>(2,i);
+
+          vm_point2d_noise[1].at<double>(0,i) = vm_point2d_noise[1].at<double>(0,i)/vm_point2d_noise[1].at<double>(2,i);
+          vm_point2d_noise[1].at<double>(1,i) = vm_point2d_noise[1].at<double>(1,i)/vm_point2d_noise[1].at<double>(2,i);
+          vm_point2d_noise[1].at<double>(2,i) = vm_point2d_noise[1].at<double>(2,i)/vm_point2d_noise[1].at<double>(2,i);
+        }
+      } break;
+      case BA2Viewes::FULL: {
+        assert( vm_data_for_process.size() == 3 );
+        double reprojection_error = 0.0;
+        const int N_points = _pose_and_structure.m_point3d.cols;
+        const int N_cameras = 2;
+        cv::Mat point3d_homo = cv::Mat::ones(4, N_points, CV_64F);
+        vm_data_for_process[0].copyTo(point3d_homo.rowRange(0,3));
+
+        vm_point2d_noise[0] = K * vm_data_for_process[1] * point3d_homo;
+        vm_point2d_noise[1] = K * vm_data_for_process[2] * point3d_homo;
+
+        // 正規化
+        for(int i = 0; i < (int)vm_point2d_noise[0].cols; i++) {
+          vm_point2d_noise[0].at<double>(0,i) = vm_point2d_noise[0].at<double>(0,i)/vm_point2d_noise[0].at<double>(2,i);
+          vm_point2d_noise[0].at<double>(1,i) = vm_point2d_noise[0].at<double>(1,i)/vm_point2d_noise[0].at<double>(2,i);
+          vm_point2d_noise[0].at<double>(2,i) = vm_point2d_noise[0].at<double>(2,i)/vm_point2d_noise[0].at<double>(2,i);
+
+          vm_point2d_noise[1].at<double>(0,i) = vm_point2d_noise[1].at<double>(0,i)/vm_point2d_noise[1].at<double>(2,i);
+          vm_point2d_noise[1].at<double>(1,i) = vm_point2d_noise[1].at<double>(1,i)/vm_point2d_noise[1].at<double>(2,i);
+          vm_point2d_noise[1].at<double>(2,i) = vm_point2d_noise[1].at<double>(2,i)/vm_point2d_noise[1].at<double>(2,i);
+        }
+      } break;
+    }
+
+    std::pair< std::vector<cv::Point2d>,std::vector<cv::Point2d> > pv_point2d;
+    pv_point2d.first.reserve(vm_point2d_noise[0].cols);
+    pv_point2d.second.reserve(vm_point2d_noise[1].cols); 
+    for(int i = 0; i < vm_point2d_noise[0].cols; i++) {
+      pv_point2d.first.push_back(cv::Point2d{vm_point2d_noise[0].at<double>(0,i),vm_point2d_noise[0].at<double>(1,i)});
+      pv_point2d.second.push_back(cv::Point2d{vm_point2d_noise[1].at<double>(0,i),vm_point2d_noise[1].at<double>(1,i)});
+    }
+
+    cv::Mat m_image0 = mpm_images.first.clone();
+    cv::Mat m_image1 = mpm_images.second.clone();
+    for(int i = 0; i < vm_point2d_noise[0].cols; i++) {
+      cv::drawMarker(m_image0, _pose_and_structure.vp_pose_and_structure[0].second[i], 
+                     cv::Scalar(255, 0, 0), cv::MARKER_CROSS, 10, 2);
+      cv::drawMarker(m_image0, pv_point2d.first[i], 
+                     cv::Scalar(0, 255, 0), cv::MARKER_CROSS, 10, 2);
+      cv::drawMarker(m_image1, _pose_and_structure.vp_pose_and_structure[1].second[i], 
+                     cv::Scalar(255, 0, 0), cv::MARKER_CROSS, 10, 2);
+      cv::drawMarker(m_image1, pv_point2d.second[i], 
+                     cv::Scalar(0, 255, 0), cv::MARKER_CROSS, 10, 2);
+      
+    }
+
+    cv::Mat mat_for_viewer;
+    cv::hconcat(m_image0, m_image1, mat_for_viewer);
+    cv::imshow(ms_window_name, mat_for_viewer);
+    cv::waitKey(1);
+#if 1
+    static int count = 1;
+    count = count + 1;
+    cv::imwrite(std::to_string(count)+".png", mat_for_viewer);
+#endif
+    return;
+  }
+
+  void Optimizer::SetVerbose(const bool b_verbose) {
+    if(b_verbose) {
+      if( (!mpm_images.first.empty()) and (!mpm_images.second.empty()) ) {
+        mb_verbose = b_verbose;
+      }
+      else {
+        std::cout << "[WARN] : The pair of images is empty, it is need in debug.\n";
+        std::cout << "         Please use SetImagePair()." << std::endl;
+      }
+    }
+    mb_verbose = b_verbose;
+    return;
+  }
+
+  void Optimizer::Spin() {
+    if(mb_verbose) {
+      while(1) {
+        if(cv::waitKey(1)=='q') {
+          break;
+        }
+      }
+    }
+  }
+
+} // namespace

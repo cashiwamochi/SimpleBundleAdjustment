@@ -18,8 +18,8 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  cv::Mat image1 = cv::imread(argv[1]);
-  cv::Mat image2 = cv::imread(argv[2]);
+  cv::Mat image1 = cv::imread(argv[1],1);
+  cv::Mat image2 = cv::imread(argv[2],1);
 
   // Camera intristic parameter matrix
   // I did not calibration
@@ -136,22 +136,19 @@ int main(int argc, char* argv[]) {
     cv::imwrite("triangulatedPoints.png", src);
   }
 
-  cv::Mat Rt0 = cv::Mat::eye(3, 4, CV_64FC1);
   cv::Mat Rt1 = cv::Mat::eye(3, 4, CV_64FC1);
-  R.copyTo(Rt1.rowRange(0,3).colRange(0,3));
-  t.copyTo(Rt1.rowRange(0,3).col(3));
+  cv::Mat Rt2 = cv::Mat::eye(3, 4, CV_64FC1);
+  R.copyTo(Rt2.rowRange(0,3).colRange(0,3));
+  t.copyTo(Rt2.rowRange(0,3).col(3));
 
 
   cv::Mat point3d_homo;
-  cv::triangulatePoints(Kd * Rt0, Kd * Rt1,
+  cv::triangulatePoints(Kd * Rt1, Kd * Rt2,
                         triangulation_points1, triangulation_points2,
                         point3d_homo);
   //point3d_homo is 64F
   //available input type is here
   //https://stackoverflow.com/questions/16295551/how-to-correctly-use-cvtriangulatepoints
-
-  //std::cout << Rt0 << std::endl;
-  //std::cout << Rt1 << std::endl;
 
   cv::Mat mat_point3d = cv::Mat::zeros(3, point3d_homo.cols, CV_64F);
 
@@ -165,7 +162,7 @@ int main(int argc, char* argv[]) {
 
   const BA2Viewes::PoseAndStructure pose_and_structure {
     Kd,
-    std::vector< std::pair< cv::Mat, std::vector<cv::Point2d> > > {std::make_pair(Rt0,triangulation_points1),std::make_pair(Rt1,triangulation_points2)},
+    std::vector< std::pair< cv::Mat, std::vector<cv::Point2d> > > {std::make_pair(Rt1,triangulation_points1),std::make_pair(Rt2,triangulation_points2)},
     mat_point3d
   };
 
@@ -173,14 +170,16 @@ int main(int argc, char* argv[]) {
   const BA2Viewes::BAMode ba_mode = BA2Viewes::FULL;
 
   BA2Viewes::Optimizer optimizer{pose_and_structure, ba_mode};
+  optimizer.SetImagePair(std::make_pair(image1,image2));
+  optimizer.SetVerbose(true);
 
   if(ba_mode == BA2Viewes::POSE) {
     std::cout << "[MODE] = POSE" << std::endl;
 
-    cv::Mat Rt0_noise, Rt1_noise;
-    BA2Viewes::AddNoiseToPose(Rt0, Rt0_noise);
+    cv::Mat Rt1_noise, Rt2_noise;
     BA2Viewes::AddNoiseToPose(Rt1, Rt1_noise);
-    optimizer.SetTargetData(std::vector<cv::Mat>{Rt0_noise, Rt1_noise});
+    BA2Viewes::AddNoiseToPose(Rt2, Rt2_noise);
+    optimizer.SetTargetData(std::vector<cv::Mat>{Rt1_noise, Rt2_noise});
 
   }
   else if (ba_mode == BA2Viewes::STRUCTURE) {
@@ -195,16 +194,16 @@ int main(int argc, char* argv[]) {
      * [バンドル調整　岡谷]でググると出てくる資料には上記の処理が書いてあり，こうしないと収束しなかった
      */
     std::cout << "[MODE] = FULL" << std::endl;
-    cv::Mat Rt1_noise;
-    BA2Viewes::AddNoiseToPose(Rt1, Rt1_noise);
+    cv::Mat Rt2_noise;
+    BA2Viewes::AddNoiseToPose(Rt2, Rt2_noise);
 
     cv::Mat point3d_noise;
     BA2Viewes::AddNoiseToStructure(mat_point3d, point3d_noise);
 
-    optimizer.SetTargetData(std::vector<cv::Mat>{point3d_noise, Rt0, Rt1_noise});
+    optimizer.SetTargetData(std::vector<cv::Mat>{point3d_noise, Rt1, Rt2_noise});
   }
 
   optimizer.Run();
-
+  optimizer.Spin();
   return 0;
 }
