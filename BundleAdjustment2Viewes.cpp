@@ -586,9 +586,7 @@ namespace BA2Viewes {
     {
       case BA2Viewes::POSE : {
         assert( vm_data_for_process.size() == 2 );
-        double reprojection_error = 0.0;
         const int N_points = _pose_and_structure.m_point3d.cols;
-        const int N_cameras = 2;
         cv::Mat point3d_homo = cv::Mat::ones(4, N_points, CV_64F);
         _pose_and_structure.m_point3d.copyTo(point3d_homo.rowRange(0,3));
 
@@ -608,10 +606,8 @@ namespace BA2Viewes {
       } break;
       case BA2Viewes::STRUCTURE: {
         assert( vm_data_for_process.size() == 1 );
-        double reprojection_error = 0.0;
-        const int N_points = _pose_and_structure.m_point3d.cols;
-        const int N_cameras = 2;
         cv::Mat point3d_homo = cv::Mat::ones(4,vm_data_for_process[0].cols,CV_64F);
+        const int N_points = _pose_and_structure.m_point3d.cols;
         vm_data_for_process[0].copyTo(point3d_homo.rowRange(0,3));
         vm_point2d_noise[0] = K * _pose_and_structure.vp_pose_and_structure[0].first * point3d_homo;
         vm_point2d_noise[1] = K * _pose_and_structure.vp_pose_and_structure[1].first * point3d_homo;
@@ -630,9 +626,7 @@ namespace BA2Viewes {
       } break;
       case BA2Viewes::FULL: {
         assert( vm_data_for_process.size() == 3 );
-        double reprojection_error = 0.0;
         const int N_points = _pose_and_structure.m_point3d.cols;
-        const int N_cameras = 2;
         cv::Mat point3d_homo = cv::Mat::ones(4, N_points, CV_64F);
         vm_data_for_process[0].copyTo(point3d_homo.rowRange(0,3));
 
