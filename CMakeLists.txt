@@ -21,10 +21,12 @@ IF (OpenCV_FOUND)
   add_definitions(${OpenCV_DEFINITIONS})
 ENDIF()
 
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
 add_executable(
   ba_example
   ba_example.cc
-  BundleAdjustment2Viewes.cpp
+  src/BundleAdjustment2Viewes.cpp
   )
 
 target_link_libraries(

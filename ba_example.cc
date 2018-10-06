@@ -6,6 +6,7 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
+#include "misc.hpp"
 #include "BundleAdjustment2Viewes.hpp"
 
 using namespace std;
@@ -170,35 +171,35 @@ int main(int argc, char* argv[]) {
   const BA2Viewes::BAMode ba_mode = BA2Viewes::POSE;
 
   BA2Viewes::Optimizer optimizer{pose_and_structure, ba_mode};
-  optimizer.SetImagePair(std::make_pair(image1,image2));
+  //optimizer.SetImagePair(std::make_pair(image1,image2));
   optimizer.SetVerbose(true);
 
   if(ba_mode == BA2Viewes::POSE) {
     std::cout << "[MODE] = POSE" << std::endl;
 
     cv::Mat Rt1_noise, Rt2_noise;
-    BA2Viewes::AddNoiseToPose(Rt1, Rt1_noise);
-    BA2Viewes::AddNoiseToPose(Rt2, Rt2_noise);
+    AddNoiseToPose(Rt1, Rt1_noise);
+    AddNoiseToPose(Rt2, Rt2_noise);
     optimizer.SetTargetData(std::vector<cv::Mat>{Rt1_noise, Rt2_noise});
 
   }
   else if (ba_mode == BA2Viewes::STRUCTURE) {
     std::cout << "[MODE] = STRUCTURE" << std::endl;
     cv::Mat point3d_noise;
-    BA2Viewes::AddNoiseToStructure(mat_point3d, point3d_noise);
+    AddNoiseToStructure(mat_point3d, point3d_noise);
     optimizer.SetTargetData(std::vector<cv::Mat>{point3d_noise});
   }
   else if (ba_mode == BA2Viewes::FULL) {
     /* FULL BA は収束半径が他よりも狭いので(?)ノイズを十分に小さくする必要があるかもしれない
-     * また，最初のカメラは原点に固定しておき，第2カメラからも一つ自由度を奪う．(固定しないと収束しない？)
+     * また，最初のカメラは原点に固定しておき，第2カメラからも一つ自由度を奪う．(固定しないと収束しない)
      * [バンドル調整　岡谷]でググると出てくる資料には上記の処理が書いてあり，こうしないと収束しなかった
      */
     std::cout << "[MODE] = FULL" << std::endl;
     cv::Mat Rt2_noise;
-    BA2Viewes::AddNoiseToPose(Rt2, Rt2_noise);
+    AddNoiseToPose(Rt2, Rt2_noise);
 
     cv::Mat point3d_noise;
-    BA2Viewes::AddNoiseToStructure(mat_point3d, point3d_noise);
+    AddNoiseToStructure(mat_point3d, point3d_noise);
 
     optimizer.SetTargetData(std::vector<cv::Mat>{point3d_noise, Rt1, Rt2_noise});
   }

@@ -53,15 +53,4 @@ namespace BA2Viewes {
     std::pair<cv::Mat,cv::Mat> mpm_images;
     const std::string ms_window_name = "debug-window ( Press q to exit )";
   };
-
-  void AddNoiseToPose(const cv::Mat& _src, cv::Mat& _dst);
-  /*
-   * _src, _dst = [3 x 4]
-   */
-
-  void AddNoiseToStructure(const cv::Mat& _src, cv::Mat& _dst);
-  /*
-   * _src, _dst = [3 x (point number)]
-   */
-
 }
