@@ -19,7 +19,7 @@ Using Gauss-Newton method, the projection-error is minimized.
 
 ```
 BundleAdjustment2Viewes.* -> Implementation of BA.
-main_ba.cc -> An example shows how to use BA.
+example_ba.cc -> An example shows how to use BA.
 ```
 
 ### Dependencies

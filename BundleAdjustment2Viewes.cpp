@@ -676,8 +676,9 @@ namespace BA2Viewes {
     cv::waitKey(1);
 #if 0
     static int count = 1;
-    count = count + 1;
     cv::imwrite(std::to_string(count)+".png", mat_for_viewer);
+    count = count + 1;
+
 #endif
     return;
   }
