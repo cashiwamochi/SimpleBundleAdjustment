@@ -503,7 +503,6 @@ namespace BA2Viewes {
         vm_point2d_noise[0] = K * vm_data_for_process[0] * point3d_homo;
         vm_point2d_noise[1] = K * vm_data_for_process[1] * point3d_homo;
 
-        // 正規化
         for(int i = 0; i < (int)vm_point2d_noise[0].cols; i++) {
           vm_point2d_noise[0].at<double>(0,i) = vm_point2d_noise[0].at<double>(0,i)/vm_point2d_noise[0].at<double>(2,i);
           vm_point2d_noise[0].at<double>(1,i) = vm_point2d_noise[0].at<double>(1,i)/vm_point2d_noise[0].at<double>(2,i);
@@ -522,7 +521,6 @@ namespace BA2Viewes {
         vm_point2d_noise[0] = K * _pose_and_structure.vp_pose_and_structure[0].first * point3d_homo;
         vm_point2d_noise[1] = K * _pose_and_structure.vp_pose_and_structure[1].first * point3d_homo;
 
-        // 正規化
         for(int i = 0; i < (int)vm_point2d_noise[0].cols; i++) {
           vm_point2d_noise[0].at<double>(0,i) = vm_point2d_noise[0].at<double>(0,i)/vm_point2d_noise[0].at<double>(2,i);
           vm_point2d_noise[0].at<double>(1,i) = vm_point2d_noise[0].at<double>(1,i)/vm_point2d_noise[0].at<double>(2,i);
@@ -543,7 +541,6 @@ namespace BA2Viewes {
         vm_point2d_noise[0] = K * vm_data_for_process[1] * point3d_homo;
         vm_point2d_noise[1] = K * vm_data_for_process[2] * point3d_homo;
 
-        // 正規化
         for(int i = 0; i < (int)vm_point2d_noise[0].cols; i++) {
           vm_point2d_noise[0].at<double>(0,i) = vm_point2d_noise[0].at<double>(0,i)/vm_point2d_noise[0].at<double>(2,i);
           vm_point2d_noise[0].at<double>(1,i) = vm_point2d_noise[0].at<double>(1,i)/vm_point2d_noise[0].at<double>(2,i);
