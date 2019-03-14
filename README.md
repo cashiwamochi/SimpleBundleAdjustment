@@ -30,7 +30,7 @@ OpenCV is used for initialization and calculation of matrices.
 
 ### Build & Use
 ```
-mkdir build && cmake .. && make
+mkdir build && cd build && cmake .. && make
 ./ba_example [path/to/image1] [path/to/image2]
 ```
 
