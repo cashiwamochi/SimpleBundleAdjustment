@@ -3,6 +3,7 @@ UniversityLibrary
 .DS_Store
 test_images
 house_images
+test_data
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -282,12 +282,16 @@ namespace BA2Viewes {
           cv::Mat e_w_x = cv::Mat::eye(3,3,CV_64F) + (std::sin(theta)/theta)*w_x + ((1.0-std::cos(theta))/(theta*theta))*w_x*w_x;
           cv::Mat V =  cv::Mat::eye(3,3,CV_64F) + ((1.0-std::cos(theta))/(theta*theta))*w_x + ((theta - std::sin(theta))/(theta*theta*theta))*w_x*w_x;
           cv::Mat Vt = V * t;
-          cv::Mat delta_SE3 = cv::Mat::eye(4,4,CV_64F);
+          cv::Mat delta_SE3 = cv::Mat::eye(3,4,CV_64F);
           e_w_x.copyTo(delta_SE3.rowRange(0,3).colRange(0,3));
           Vt.copyTo(delta_SE3.rowRange(0,3).col(3));
 
+          cv::Mat current_pose = cv::Mat::eye(4,4,CV_64F);
+          vm_poses[i].copyTo(current_pose.rowRange(0,3).colRange(0,4));
+
           // Update!
-          vm_poses[i] = vm_poses[i] * delta_SE3;
+          // vm_poses[i] = vm_poses[i] * delta_SE3;
+          vm_poses[i] =  delta_SE3*current_pose;
         }
 
         return vm_poses;
@@ -321,12 +325,16 @@ namespace BA2Viewes {
         cv::Mat e_w_x = cv::Mat::eye(3,3,CV_64F) + (std::sin(theta)/theta)*w_x + ((1.0-std::cos(theta))/(theta*theta))*w_x*w_x;
         cv::Mat V =  cv::Mat::eye(3,3,CV_64F) + ((1.0-std::cos(theta))/(theta*theta))*w_x + ((theta - std::sin(theta))/(theta*theta*theta))*w_x*w_x;
         cv::Mat Vt = V * t;
-        cv::Mat delta_SE3 = cv::Mat::eye(4,4,CV_64F);
+        cv::Mat delta_SE3 = cv::Mat::eye(3,4,CV_64F);
         e_w_x.copyTo(delta_SE3.rowRange(0,3).colRange(0,3));
         Vt.copyTo(delta_SE3.rowRange(0,3).col(3));
 
+        cv::Mat current_pose = cv::Mat::eye(4,4,CV_64F);
+        vm_poses[1].copyTo(current_pose.rowRange(0,3).colRange(0,4));
+
         // Update!
-        vm_poses[1] = vm_poses[1] * delta_SE3;
+        // vm_poses[1] = vm_poses[1] * delta_SE3;
+        vm_poses[1] = delta_SE3*current_pose;
 
         cv::Mat _point3d = vm_data_for_process[0];
         const int N_points = _point3d.cols;
